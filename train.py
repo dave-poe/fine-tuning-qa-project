@@ -1,3 +1,4 @@
+import os
 import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -7,7 +8,20 @@ from trl import SFTTrainer, SFTConfig
 # 1. Config
 model_name = "Qwen/Qwen2.5-0.5B-Instruct" 
 output_dir = "models/qa-fine-tuned"
+max_steps = int(os.environ.get("MAX_STEPS", 100))
 
+# Auto-detect device
+if torch.cuda.is_available():
+    device = "cuda"
+    use_mps = False
+elif torch.backends.mps.is_available():
+    device = "mps"
+    use_mps = True
+else:
+    device = "cpu"
+    use_mps = False
+
+print(f"Using device: {device}")
 print(f"Loading model: {model_name}...")
 
 # 2. Data
@@ -47,10 +61,10 @@ training_args = SFTConfig(
     per_device_train_batch_size=2, 
     gradient_accumulation_steps=4,
     learning_rate=2e-4,
-    logging_steps=5, # Log less frequently
-    num_train_epochs=15, # Increase epochs
-    max_steps=100, # More steps for better saturation
-    use_mps_device=True,
+    logging_steps=5,
+    num_train_epochs=15,
+    max_steps=max_steps,
+    use_mps_device=use_mps,
     fp16=False,
     bf16=False,
     report_to="none",
@@ -66,7 +80,7 @@ trainer = SFTTrainer(
     args=training_args,
 )
 
-print("Starting training on M2...")
+print(f"Starting training on {device}...")
 trainer.train()
 print("Training finished!")
 trainer.save_model(output_dir)
