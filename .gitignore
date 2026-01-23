@@ -10,6 +10,7 @@ env/
 
 # MacOS
 .DS_Store
+.vscode/
 
 # Large Models (Artifacts)
 models/
