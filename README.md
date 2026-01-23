@@ -1,6 +1,8 @@
 # QA Fine-Tuning Project
 
-A hands-on project demonstrating how to fine-tune a Large Language Model (LLM) to specialize in converting **Product Requirements** into **Structured Test Cases** (Given-When-Then format).
+This project is experimenting and learning about fine tuning concepts. 
+
+Demonstrating how to fine-tune a Large Language Model (LLM) to specialize in converting **Product Requirements** into **Structured Test Cases** (Given-When-Then format).
 
 This project showcases the end-to-end MLOps pipeline:
 1.  **Data Engineering**: Synthetically generating domain-specific training data.
