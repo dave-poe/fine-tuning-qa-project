@@ -31,7 +31,7 @@ model.to(device)
 instruction = "Generate QA test cases for the following requirement: The system must prevent users from checking out if the inventory count is less than the requested quantity."
 prompt = f"User: {instruction}\nAssistant:"
 
-inputs = tokenizer(prompt, return_tensors="pt").to(base_model.device)
+inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
 print("\nGenerating...")
 with torch.no_grad():
