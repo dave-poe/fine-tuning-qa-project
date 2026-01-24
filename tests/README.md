@@ -94,7 +94,7 @@ Validates that model performs consistently across multiple runs (handles non-det
 
 | Test                                      | Description             | Pass Criteria                                |
 | ----------------------------------------- | ----------------------- | -------------------------------------------- |
-| `test_multiple_runs_pass_structure_check` | Runs generation 5 times | At least 60% of runs produce valid structure |
+| `test_multiple_runs_pass_structure_check` | Runs generation 5 times | At least 80% of runs produce valid structure |
 
 ## Golden Test Cases
 
@@ -116,7 +116,7 @@ Thresholds and limits are defined in `test_data.py`:
 MIN_OUTPUT_LENGTH = 50          # Minimum characters
 MAX_OUTPUT_LENGTH = 2000        # Maximum characters
 CONSISTENCY_RUNS = 5            # Number of runs for consistency test
-CONSISTENCY_PASS_THRESHOLD = 0.6  # 60% must pass
+CONSISTENCY_PASS_THRESHOLD = 0.8  # 80% must pass
 ```
 
 ## Fixtures

@@ -57,4 +57,4 @@ MAX_OUTPUT_LENGTH = 2000
 
 # Consistency test configuration
 CONSISTENCY_RUNS = 5
-CONSISTENCY_PASS_THRESHOLD = 0.6  # 60% of runs should pass
+CONSISTENCY_PASS_THRESHOLD = 0.8  # 80% of runs should pass
