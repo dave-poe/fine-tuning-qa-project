@@ -57,3 +57,7 @@ jobs:
       - name: Run inference
         run: |
           python inference.py
+
+      - name: Validate model output
+        run: |
+          cd tests && pytest test_model_validation.py -v --tb=short
