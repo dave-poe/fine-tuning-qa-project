@@ -15,7 +15,7 @@ if not os.path.exists(adapter_path):
 print("Loading Base Model...")
 base_model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    torch_dtype=torch.float32,
+    dtype=torch.float32,
 )
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
