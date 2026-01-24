@@ -1,6 +1,6 @@
 # QA Fine-Tuning Project
 
-This project is experimenting and learning about fine tuning concepts. 
+This project has been created to experiment and learn about fine tuning using Low-Rank Adaptation w/ Qwen2.5-0.5B-Instruct
 
 Demonstrating how to fine-tune a Large Language Model (LLM) to specialize in converting **Product Requirements** into **Structured Test Cases** (Given-When-Then format).
 
