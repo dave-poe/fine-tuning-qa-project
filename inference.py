@@ -11,19 +11,25 @@ if not os.path.exists(adapter_path):
     print("Please run 'python train.py' first to generate the model weights.")
     exit(1)
 
+# Auto-detect device
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+
 # Load on CPU first to avoid 'meta' device KeyError on Mac with PEFT
 print("Loading Base Model...")
 base_model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    torch_dtype=torch.float32,
+    dtype=torch.float32,
 )
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 print("Loading Fine-Tuned Adapter...")
 model = PeftModel.from_pretrained(base_model, adapter_path)
 
-# Now move to MPS (Metal) for fast generation
-device = "mps" if torch.backends.mps.is_available() else "cpu"
 print(f"Moving model to {device}...")
 model.to(device)
 
@@ -31,7 +37,7 @@ model.to(device)
 instruction = "Generate QA test cases for the following requirement: The system must prevent users from checking out if the inventory count is less than the requested quantity."
 prompt = f"User: {instruction}\nAssistant:"
 
-inputs = tokenizer(prompt, return_tensors="pt").to(base_model.device)
+inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
 print("\nGenerating...")
 with torch.no_grad():
