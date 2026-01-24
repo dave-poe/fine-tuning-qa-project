@@ -60,4 +60,4 @@ jobs:
 
       - name: Validate model output
         run: |
-          cd tests && pytest test_model_validation.py -v --tb=short
+          pytest tests/test_model_validation.py -v --tb=short

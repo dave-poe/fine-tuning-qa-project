@@ -11,7 +11,7 @@ import re
 import pytest
 from collections import Counter
 
-from test_data import (
+from .test_data import (
     TEST_CASES,
     VALID_STRUCTURE_PATTERNS,
     MIN_OUTPUT_LENGTH,
