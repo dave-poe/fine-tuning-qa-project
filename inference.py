@@ -1,9 +1,22 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
+import os
+import re
 
 model_name = "Qwen/Qwen2.5-0.5B-Instruct"
 adapter_path = "models/qa-fine-tuned"
+
+# Try to find the latest model directory (with steps in name)
+model_dirs = [d for d in os.listdir("models") if os.path.isdir(f"models/{d}") and d.startswith("qa-fine-tuned")]
+if model_dirs:
+    # Sort by modification time, get the latest
+    model_dirs.sort(key=lambda d: os.path.getmtime(f"models/{d}"), reverse=True)
+    adapter_path = f"models/{model_dirs[0]}"
+
+# Extract steps from directory name if available
+steps_match = re.search(r'steps-(\d+)', adapter_path)
+training_steps = steps_match.group(1) if steps_match else "Unknown"
 
 import os
 if not os.path.exists(adapter_path):
@@ -44,3 +57,10 @@ with torch.no_grad():
 
 print("\n### Generated Test Cases ###\n")
 print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+
+print("\n" + "="*60)
+print("Model Information:")
+print(f"  Base Model: {model_name}")
+print(f"  Training Steps: {training_steps}")
+print(f"  Adapter Path: {adapter_path}")
+print("="*60)
