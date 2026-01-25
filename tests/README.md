@@ -119,6 +119,16 @@ CONSISTENCY_RUNS = 5            # Number of runs for consistency test
 CONSISTENCY_PASS_THRESHOLD = 0.8  # 80% must pass
 ```
 
+## Test Reports
+
+Test results are automatically published in GitHub Actions:
+
+- **JUnit XML** - Machine-readable format for CI/CD integration
+- **HTML Report** - Interactive test report for browsing
+- **GitHub Test Reporter** - Displays results in PR checks and job summary
+
+Reports are retained for 30 days as workflow artifacts.
+
 ## Fixtures
 
 Defined in `conftest.py`:

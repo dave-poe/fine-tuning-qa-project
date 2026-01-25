@@ -60,4 +60,24 @@ jobs:
 
       - name: Validate model output
         run: |
-          pytest tests/test_model_validation.py -v --tb=short
+          pytest tests/test_model_validation.py -v \
+            --tb=short \
+            --junit-xml=test-results/junit.xml \
+            --html=test-results/report.html \
+            --self-contained-html
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: test-results/
+          retention-days: 30
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Pytest Results
+          path: test-results/junit.xml
+          reporter: java-junit
