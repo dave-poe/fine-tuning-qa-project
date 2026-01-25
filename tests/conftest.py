@@ -2,6 +2,7 @@
 Pytest fixtures for model validation tests.
 """
 import os
+import re
 import pytest
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -10,7 +11,16 @@ from peft import PeftModel
 
 # Model configuration
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
-ADAPTER_PATH = "models/qa-fine-tuned"
+
+
+def get_latest_adapter_path():
+    """Find the latest model adapter directory."""
+    model_dirs = [d for d in os.listdir("models") if os.path.isdir(f"models/{d}") and d.startswith("qa-fine-tuned")]
+    if model_dirs:
+        # Sort by modification time, get the latest
+        model_dirs.sort(key=lambda d: os.path.getmtime(f"models/{d}"), reverse=True)
+        return f"models/{model_dirs[0]}"
+    return "models/qa-fine-tuned"
 
 
 @pytest.fixture(scope="session")
@@ -32,8 +42,10 @@ def tokenizer():
 @pytest.fixture(scope="session")
 def model(device):
     """Load the fine-tuned model with LoRA adapter."""
-    if not os.path.exists(ADAPTER_PATH):
-        pytest.skip(f"Model not found at {ADAPTER_PATH}. Run training first.")
+    adapter_path = get_latest_adapter_path()
+    
+    if not os.path.exists(adapter_path):
+        pytest.skip(f"Model not found at {adapter_path}. Run training first.")
     
     # Load base model
     base_model = AutoModelForCausalLM.from_pretrained(
@@ -42,7 +54,7 @@ def model(device):
     )
     
     # Load fine-tuned adapter
-    model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
+    model = PeftModel.from_pretrained(base_model, adapter_path)
     model.to(device)
     model.eval()
     
