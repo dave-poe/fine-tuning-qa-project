@@ -12,6 +12,11 @@ on:
     types:
       - completed
 
+permissions:
+  checks: write
+  contents: read
+  actions: read
+
 jobs:
   inference:
     runs-on: ubuntu-latest
