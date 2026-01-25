@@ -70,8 +70,8 @@ See `tests/README.md` for comprehensive testing documentation.
 
 | Property | Value |
 |----------|-------|
-| **Base Model** | Qwen/Qwen3-0.6B-Instruct |
-| **Architecture** | 600M parameters |
+| **Base Model** | Qwen/Qwen2.5-0.5B-Instruct |
+| **Architecture** | 500M parameters |
 | **Training Method** | LoRA (Low-Rank Adaptation) |
 | **Training Data** | 50 BDD examples |
 | **Validation Data** | 10 BDD examples |
@@ -98,6 +98,7 @@ See `tests/README.md` for comprehensive testing documentation.
 - Manual trigger with optional run ID
 - Runs validation suite with HTML and JUnit reporting
 - GitHub Test Reporter integration
+- Requires `HF_TOKEN` secret for model downloads
 
 ## License
 

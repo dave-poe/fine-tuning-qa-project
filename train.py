@@ -6,7 +6,7 @@ from peft import LoraConfig
 from trl import SFTTrainer, SFTConfig
 
 # 1. Config
-model_name = "Qwen/Qwen3-0.6B-Instruct" 
+model_name = "Qwen/Qwen2.5-0.5B-Instruct" 
 max_steps = int(os.environ.get("MAX_STEPS", 100))
 output_dir = f"models/qa-fine-tuned-steps-{max_steps}"
 

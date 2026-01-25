@@ -10,7 +10,7 @@ from peft import PeftModel
 
 
 # Model configuration
-MODEL_NAME = "Qwen/Qwen3-0.6B-Instruct"
+MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
 
 def get_latest_adapter_path():
