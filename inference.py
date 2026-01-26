@@ -4,7 +4,7 @@ from peft import PeftModel
 import os
 import re
 
-model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+model_name = "Qwen/Qwen3-0.6B"
 adapter_path = "models/qa-fine-tuned"
 
 # Try to find the latest model directory (with steps in name)
