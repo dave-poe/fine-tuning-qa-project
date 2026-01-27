@@ -1,70 +1,75 @@
+"""
+Data statistics utility for the QA fine-tuning project.
+
+This script validates and reports on the training, validation, and test datasets.
+The data files are now maintained manually to ensure diversity and quality.
+
+Usage:
+    python populate_data.py
+"""
 import json
-import random
+import os
 
-# We will generate synthetic "Product Requirements" and corresponding "Test Cases".
-# Since we want to run this locally without an external API, we will use templates.
 
-files = {
-    "train": "data/train.jsonl",
-    "val": "data/val.jsonl"
-}
+def load_jsonl(filepath):
+    """Load a JSONL file and return list of records."""
+    if not os.path.exists(filepath):
+        return []
+    with open(filepath, "r") as f:
+        return [json.loads(line) for line in f if line.strip()]
 
-features = ["Login", "Checkout", "Search", "Profile", "inventory_api", "payment_gateway"]
-actions = ["Verify that", "Ensure that", "Check if"]
-conditions = ["user is logged in", "cart is empty", "network is slow", "input is invalid"]
 
-templates = [
-    {
-        "req": "The system must prevent users from checking out if the inventory count is less than the requested quantity.",
-        "tests": [
-            "Scenario: Inventory check success\nGiven product A has stock 5\nWhen user adds 2 of product A\nThen checkout is allowed",
-            "Scenario: Inventory check failure\nGiven product A has stock 5\nWhen user adds 6 of product A\nThen checkout is blocked with error 'Insufficient Stock'"
-        ]
-    },
-    {
-        "req": "The API endpoint /api/v1/users should return 401 Unauthorized if the Bearer token is missing.",
-        "tests": [
-            "Test: Valid Token\nRequest: GET /api/v1/users Headers: {Authorization: Bearer valid_token}\nResponse: 200 OK",
-            "Test: Missing Token\nRequest: GET /api/v1/users Headers: {}\nResponse: 401 Unauthorized"
-        ]
-    },
-    {
-        "req": "Password fields must require at least one special character and be 8 chars long.",
-        "tests": [
-            "Test: Weak Password (No Special Char)\nInput: 'password123'\nExpected: Error 'Must contain special character'",
-            "Test: Short Password\nInput: 'pass!'\nExpected: Error 'Must be 8+ characters'",
-            "Test: Valid Password\nInput: 'Password123!'\nExpected: Success"
-        ]
-    }
-]
+def get_unique_instructions(records):
+    """Get unique instructions from records."""
+    return set(r["instruction"] for r in records)
 
-def generate_entry():
-    # In a real scenario, we'd have hundreds of unique inputs.
-    # Here we rotate through our manual highly-quality templates to mimic the structure.
-    base = random.choice(templates)
-    return {
-        "instruction": f"Generate QA test cases for the following requirement: {base['req']}",
-        "input": "",
-        "output": "\n\n".join(base['tests'])
-    }
 
 def main():
-    print("Generating dataset...")
+    files = {
+        "train": "data/train.jsonl",
+        "validation": "data/val.jsonl",
+        "test": "data/test.jsonl",
+    }
     
-    # Generate 50 training examples (duplicated/randomized slightly for volume simulation)
-    with open(files["train"], "w") as f:
-        for _ in range(50):
-            entry = generate_entry()
-            f.write(json.dumps(entry) + "\n")
-            
-    # Generate 10 validation examples
-    with open(files["val"], "w") as f:
-        for _ in range(10):
-            entry = generate_entry()
-            f.write(json.dumps(entry) + "\n")
-            
-    print(f"Created {files['train']} (50 examples)")
-    print(f"Created {files['val']} (10 examples)")
+    print("=" * 60)
+    print("QA Fine-Tuning Dataset Statistics")
+    print("=" * 60)
+    
+    all_instructions = set()
+    
+    for name, filepath in files.items():
+        records = load_jsonl(filepath)
+        unique = get_unique_instructions(records)
+        
+        print(f"\n{name.upper()} ({filepath}):")
+        print(f"  Total examples: {len(records)}")
+        print(f"  Unique instructions: {len(unique)}")
+        
+        if len(records) != len(unique):
+            print(f"  WARNING: {len(records) - len(unique)} duplicate instructions found!")
+        
+        # Check for overlap with other sets
+        overlap = all_instructions & unique
+        if overlap:
+            print(f"  WARNING: {len(overlap)} instructions overlap with other sets!")
+            for instr in list(overlap)[:2]:
+                print(f"    - {instr[:60]}...")
+        
+        all_instructions.update(unique)
+    
+    print("\n" + "=" * 60)
+    print(f"Total unique instructions across all sets: {len(all_instructions)}")
+    print("=" * 60)
+    
+    # Sample output formats
+    print("\nSample training example format:")
+    train_records = load_jsonl(files["train"])
+    if train_records:
+        sample = train_records[0]
+        print(f"  Instruction: {sample['instruction'][:60]}...")
+        output_preview = sample['output'].replace('\n', ' ')[:80]
+        print(f"  Output: {output_preview}...")
+
 
 if __name__ == "__main__":
     main()

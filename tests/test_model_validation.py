@@ -13,6 +13,8 @@ from collections import Counter
 
 from .test_data import (
     TEST_CASES,
+    TRAINING_TEST_CASES,
+    NOVEL_TEST_CASES,
     VALID_STRUCTURE_PATTERNS,
     MIN_OUTPUT_LENGTH,
     MAX_OUTPUT_LENGTH,
@@ -141,7 +143,7 @@ class TestOutputQuality:
 class TestConsistency:
     """Tests that validate output consistency across multiple runs."""
 
-    @pytest.mark.parametrize("test_case", TEST_CASES[:2], ids=lambda tc: tc["id"])
+    @pytest.mark.parametrize("test_case", TRAINING_TEST_CASES[:2], ids=lambda tc: tc["id"])
     def test_multiple_runs_pass_structure_check(self, generate_output, test_case):
         """Validate that multiple runs consistently produce valid structure."""
         passes = 0
@@ -161,4 +163,62 @@ class TestConsistency:
             f"Consistency check failed. "
             f"Only {passes}/{CONSISTENCY_RUNS} runs ({pass_rate:.0%}) "
             f"produced valid output. Expected >= {CONSISTENCY_PASS_THRESHOLD:.0%}."
+        )
+
+
+class TestGeneralization:
+    """Tests that validate model generalizes to unseen requirements.
+    
+    These tests use requirements NOT present in training data to verify
+    the model learned the BDD pattern rather than memorizing examples.
+    """
+
+    @pytest.mark.parametrize("test_case", NOVEL_TEST_CASES, ids=lambda tc: tc["id"])
+    def test_novel_prompt_produces_bdd_structure(self, generate_output, test_case):
+        """Validate novel prompts still produce valid BDD structure."""
+        output = generate_output(test_case["instruction"])
+
+        has_valid_pattern = any(
+            re.search(pattern, output, re.IGNORECASE)
+            for pattern in VALID_STRUCTURE_PATTERNS
+        )
+
+        assert has_valid_pattern, (
+            f"[GENERALIZATION] Model failed on unseen requirement.\n"
+            f"Requirement: {test_case['instruction'][:100]}...\n"
+            f"Expected BDD structure (Given/When/Then).\n"
+            f"Got: {output[:300]}..."
+        )
+
+    @pytest.mark.parametrize("test_case", NOVEL_TEST_CASES, ids=lambda tc: tc["id"])
+    def test_novel_prompt_mentions_keywords(self, generate_output, test_case):
+        """Validate novel prompts include relevant domain keywords."""
+        output = generate_output(test_case["instruction"])
+        output_lower = output.lower()
+
+        keywords = test_case["expected_keywords"]
+        matched_keywords = [kw for kw in keywords if kw.lower() in output_lower]
+
+        # At least 40% of keywords for novel prompts (slightly relaxed)
+        min_matches = max(1, int(len(keywords) * 0.4))
+
+        assert len(matched_keywords) >= min_matches, (
+            f"[GENERALIZATION] Novel prompt missing keywords.\n"
+            f"Expected at least {min_matches} of: {keywords}\n"
+            f"Found: {matched_keywords}\n"
+            f"Output: {output[:300]}..."
+        )
+
+    @pytest.mark.parametrize("test_case", NOVEL_TEST_CASES, ids=lambda tc: tc["id"])
+    def test_novel_prompt_has_multiple_scenarios(self, generate_output, test_case):
+        """Validate novel prompts produce multiple test scenarios."""
+        output = generate_output(test_case["instruction"])
+
+        # Count occurrences of scenario indicators
+        scenario_count = len(re.findall(r"(Test:|Scenario:)", output, re.IGNORECASE))
+
+        assert scenario_count >= 2, (
+            f"[GENERALIZATION] Novel prompt should produce multiple scenarios.\n"
+            f"Expected at least 2, found {scenario_count}.\n"
+            f"Output: {output[:300]}..."
         )

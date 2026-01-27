@@ -1,7 +1,9 @@
 import os
+import json
+from datetime import datetime
 import torch
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
 from peft import LoraConfig
 from trl import SFTTrainer, SFTConfig
 
@@ -9,6 +11,41 @@ from trl import SFTTrainer, SFTConfig
 model_name = "Qwen/Qwen3-0.6B" 
 max_steps = int(os.environ.get("MAX_STEPS", 100))
 output_dir = f"models/qa-fine-tuned-steps-{max_steps}"
+logs_dir = "logs"
+
+# Ensure logs directory exists
+os.makedirs(logs_dir, exist_ok=True)
+
+
+class MetricsLogger(TrainerCallback):
+    """Callback to log training metrics to JSON file."""
+    
+    def __init__(self, log_file):
+        self.log_file = log_file
+        self.metrics = {
+            "training_started": datetime.now().isoformat(),
+            "steps": []
+        }
+    
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs:
+            step_data = {
+                "step": state.global_step,
+                "epoch": state.epoch,
+                **{k: v for k, v in logs.items() if isinstance(v, (int, float))}
+            }
+            self.metrics["steps"].append(step_data)
+            # Save after each log to preserve data on interruption
+            self._save()
+    
+    def on_train_end(self, args, state, control, **kwargs):
+        self.metrics["training_ended"] = datetime.now().isoformat()
+        self.metrics["final_step"] = state.global_step
+        self._save()
+    
+    def _save(self):
+        with open(self.log_file, "w") as f:
+            json.dump(self.metrics, f, indent=2)
 
 # Auto-detect device
 if torch.cuda.is_available():
@@ -71,22 +108,46 @@ training_args = SFTConfig(
     packing=False
 )
 
-# 7. Trainer
+# 7. Trainer with metrics logging
+metrics_file = os.path.join(logs_dir, f"training_metrics_{max_steps}_steps.json")
+metrics_logger = MetricsLogger(metrics_file)
+
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset["train"],
     eval_dataset=dataset["validation"],
     peft_config=peft_config,
     args=training_args,
+    callbacks=[metrics_logger],
 )
 
 print(f"Starting training on {device}...")
+print(f"Metrics will be saved to: {metrics_file}")
 trainer.train()
 print("Training finished!")
 trainer.save_model(output_dir)
+
+# Save final training summary
+summary = {
+    "model_name": model_name,
+    "device": device,
+    "max_steps": max_steps,
+    "actual_steps": trainer.state.global_step,
+    "output_dir": output_dir,
+    "training_examples": len(dataset["train"]),
+    "validation_examples": len(dataset["validation"]),
+    "final_loss": trainer.state.log_history[-1].get("loss") if trainer.state.log_history else None,
+}
+summary_file = os.path.join(output_dir, "training_summary.json")
+with open(summary_file, "w") as f:
+    json.dump(summary, f, indent=2)
+
 print(f"Model saved to {output_dir}")
 print(f"\nTraining Summary:")
 print(f"  Device: {device}")
 print(f"  Base Model: {model_name}")
 print(f"  Steps Completed: {trainer.state.global_step}")
+print(f"  Training Examples: {len(dataset['train'])}")
+print(f"  Validation Examples: {len(dataset['validation'])}")
+print(f"  Metrics Log: {metrics_file}")
 print(f"  Model Location: {output_dir}")
