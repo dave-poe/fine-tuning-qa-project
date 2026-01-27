@@ -101,7 +101,6 @@ training_args = SFTConfig(
     logging_steps=5,
     num_train_epochs=15,
     max_steps=max_steps,
-    use_mps_device=use_mps,
     fp16=False,
     bf16=False,
     report_to="none",
