@@ -68,7 +68,7 @@ dataset = load_dataset("json", data_files={"train": "data/train.jsonl", "validat
 # Load in float32 for maximum compatibility on Mac MPS
 model = AutoModelForCausalLM.from_pretrained(
     model_name, 
-    dtype=torch.float32,
+    torch_dtype=torch.float32,
 )
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token 
